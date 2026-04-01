@@ -4,7 +4,7 @@ export default class AbstractView {
   }
 
   getTemplate() {
-    throw new Error('Метод getTemplate должен быть реализован в дочернем классе');
+    throw new Error('Method getTemplate must be implemented in child class');
   }
 
   getElement() {
