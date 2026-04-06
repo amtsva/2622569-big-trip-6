@@ -8,6 +8,7 @@ export default class Presenter {
   #container = null;
   #pointsModel = null;
   #pointListComponent = null;
+  #currentPointComponent = null;
 
   constructor(container, pointsModel) {
     this.#container = container;
@@ -18,23 +19,52 @@ export default class Presenter {
     this.#container.innerHTML = '';
 
     const filtersComponent = new FiltersView();
-    this.#container.appendChild(filtersComponent.getElement());
+    this.#container.appendChild(filtersComponent.element);
 
     const sortComponent = new SortView();
-    this.#container.appendChild(sortComponent.getElement());
+    this.#container.appendChild(sortComponent.element);
 
     this.#pointListComponent = new PointListView();
-    this.#container.appendChild(this.#pointListComponent.getElement());
+    this.#container.appendChild(this.#pointListComponent.element);
 
     const points = this.#pointsModel.getPoints();
 
-    const firstPoint = points[0];
-    const editFormComponent = new EditFormView(firstPoint);
-    this.#pointListComponent.getElement().appendChild(editFormComponent.getElement());
-
     for (const point of points) {
-      const pointComponent = new PointView(point);
-      this.#pointListComponent.getElement().appendChild(pointComponent.getElement());
+      this.#renderPoint(point);
     }
+  }
+
+  #renderPoint(point) {
+    const pointComponent = new PointView({
+      point: point,
+      onEditClick: () => this.#replacePointToEditForm(point)
+    });
+
+    this.#pointListComponent.element.appendChild(pointComponent.element);
+  }
+
+  #replacePointToEditForm(point) {
+    const editFormComponent = new EditFormView({
+      point: point,
+      onFormSubmit: () => this.#replaceEditFormToPoint(point),
+      onCancelClick: () => this.#replaceEditFormToPoint(point)
+    });
+
+    this.#pointListComponent.element.replaceChild(
+      editFormComponent.element,
+      this.#pointListComponent.element.querySelector('.trip-events__item')
+    );
+  }
+
+  #replaceEditFormToPoint(point) {
+    const pointComponent = new PointView({
+      point: point,
+      onEditClick: () => this.#replacePointToEditForm(point)
+    });
+
+    this.#pointListComponent.element.replaceChild(
+      pointComponent.element,
+      this.#pointListComponent.element.querySelector('.trip-events__item')
+    );
   }
 }

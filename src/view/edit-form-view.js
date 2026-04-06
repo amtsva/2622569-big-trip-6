@@ -1,15 +1,24 @@
-import AbstractView from './abstract-view.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import { TYPES, OFFERS } from '../const.js';
 
 export default class EditFormView extends AbstractView {
   #point = null;
+  #handleFormSubmit = null;
+  #handleCancelClick = null;
 
-  constructor(point) {
+  constructor({ point, onFormSubmit, onCancelClick }) {
     super();
     this.#point = point;
+    this.#handleFormSubmit = onFormSubmit;
+    this.#handleCancelClick = onCancelClick;
+
+    this.element.querySelector('form')
+      ?.addEventListener('submit', this.#formSubmitHandler);
+    this.element.querySelector('.event__reset-btn')
+      ?.addEventListener('click', this.#cancelClickHandler);
   }
 
-  getTemplate() {
+  get template() {
     const startDate = this.#point?.startDate || new Date();
     const endDate = this.#point?.endDate || new Date();
 
@@ -108,4 +117,14 @@ export default class EditFormView extends AbstractView {
       </li>
     `;
   }
+
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFormSubmit();
+  };
+
+  #cancelClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleCancelClick();
+  };
 }

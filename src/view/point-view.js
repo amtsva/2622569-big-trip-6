@@ -1,14 +1,19 @@
-import AbstractView from './abstract-view.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 export default class PointView extends AbstractView {
   #point = null;
+  #handleEditClick = null;
 
-  constructor(point) {
+  constructor({ point, onEditClick }) {
     super();
     this.#point = point;
+    this.#handleEditClick = onEditClick;
+
+    this.element.querySelector('.event__rollup-btn')
+      ?.addEventListener('click', this.#editClickHandler);
   }
 
-  getTemplate() {
+  get template() {
     const startDate = this.#point.startDate;
     const endDate = this.#point.endDate;
 
@@ -66,4 +71,9 @@ export default class PointView extends AbstractView {
       </li>
     `;
   }
+
+  #editClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleEditClick();
+  };
 }
