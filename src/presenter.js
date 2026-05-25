@@ -1,14 +1,25 @@
 import FiltersView from './view/filters-view.js';
 import SortView from './view/sort-view.js';
 import PointListView from './view/point-list-view.js';
-import PointView from './view/point-view.js';
-import EditFormView from './view/edit-form-view.js';
+import EmptyPointsView from './view/empty-points-view.js';
+
+import PointPresenter from './presenter/point-presenter.js';
+
+import { render } from './framework/render.js';
+import { FilterType } from './const.js';
 
 export default class Presenter {
   #container = null;
   #pointsModel = null;
-  #pointListComponent = null;
-  #currentPointComponent = null;
+
+  #pointListComponent = new PointListView();
+  #filtersComponent = null;
+  #sortComponent = null;
+  #emptyPointsComponent = null;
+
+  #currentFilter = FilterType.EVERYTHING;
+
+  #pointPresenters = new Map();
 
   constructor(container, pointsModel) {
     this.#container = container;
@@ -18,53 +29,83 @@ export default class Presenter {
   init() {
     this.#container.innerHTML = '';
 
-    const filtersComponent = new FiltersView();
-    this.#container.appendChild(filtersComponent.element);
+    this.#filtersComponent = new FiltersView({
+      currentFilter: this.#currentFilter,
+      onFilterChange: this.#handleFilterChange
+    });
 
-    const sortComponent = new SortView();
-    this.#container.appendChild(sortComponent.element);
+    this.#sortComponent = new SortView();
 
-    this.#pointListComponent = new PointListView();
-    this.#container.appendChild(this.#pointListComponent.element);
+    render(this.#filtersComponent, this.#container);
+    render(this.#sortComponent, this.#container);
+    render(this.#pointListComponent, this.#container);
 
-    const points = this.#pointsModel.getPoints();
+    this.#renderPoints();
+  }
 
-    for (const point of points) {
-      this.#renderPoint(point);
+  #handleFilterChange = (filterType) => {
+    this.#currentFilter = filterType;
+
+    this.#clearPointsList();
+    this.#renderPoints();
+  };
+
+  #handlePointChange = (updatedPoint) => {
+    this.#pointsModel.updatePoint(updatedPoint);
+
+    const pointPresenter = this.#pointPresenters.get(updatedPoint.id);
+
+    if (pointPresenter) {
+      pointPresenter.init(updatedPoint);
     }
+  };
+
+  #handleModeChange = () => {
+    this.#pointPresenters.forEach(
+      (presenter) => presenter.resetView()
+    );
+  };
+
+  #clearPointsList() {
+    this.#pointListComponent.element.innerHTML = '';
+    this.#pointPresenters.clear();
+  }
+
+  #renderPoints() {
+    const points = this.#pointsModel.getPointsByFilter(
+      this.#currentFilter
+    );
+
+    if (points.length === 0) {
+      this.#renderEmptyPoints();
+      return;
+    }
+
+    points.forEach((point) => {
+      this.#renderPoint(point);
+    });
+  }
+
+  #renderEmptyPoints() {
+    this.#emptyPointsComponent = new EmptyPointsView(
+      this.#currentFilter
+    );
+
+    render(
+      this.#emptyPointsComponent,
+      this.#pointListComponent.element
+    );
   }
 
   #renderPoint(point) {
-    const pointComponent = new PointView({
-      point: point,
-      onEditClick: () => this.#replacePointToEditForm(point)
+    const pointPresenter = new PointPresenter({
+      pointListContainer: this.#pointListComponent.element,
+      onDataChange: this.#handlePointChange,
+      onModeChange: this.#handleModeChange
     });
 
-    this.#pointListComponent.element.appendChild(pointComponent.element);
-  }
+    pointPresenter.init(point);
 
-  #replacePointToEditForm(point) {
-    const editFormComponent = new EditFormView({
-      point: point,
-      onFormSubmit: () => this.#replaceEditFormToPoint(point),
-      onCancelClick: () => this.#replaceEditFormToPoint(point)
-    });
-
-    this.#pointListComponent.element.replaceChild(
-      editFormComponent.element,
-      this.#pointListComponent.element.querySelector('.trip-events__item')
-    );
-  }
-
-  #replaceEditFormToPoint(point) {
-    const pointComponent = new PointView({
-      point: point,
-      onEditClick: () => this.#replacePointToEditForm(point)
-    });
-
-    this.#pointListComponent.element.replaceChild(
-      pointComponent.element,
-      this.#pointListComponent.element.querySelector('.trip-events__item')
-    );
+    this.#pointPresenters.set(point.id, pointPresenter);
   }
 }

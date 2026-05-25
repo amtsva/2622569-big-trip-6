@@ -1,10 +1,11 @@
 import Presenter from './presenter.js';
 import PointsModel from './model/points-model.js';
 
-const siteMainElement = document.querySelector('.trip-events');
+
+const siteMainElement = document.querySelector('.trip-events__list-container');
 
 if (!siteMainElement) {
-  throw new Error('Element .trip-events not found in index.html');
+  throw new Error('Element .trip-events__list-container not found in index.html');
 }
 
 const pointsModel = new PointsModel();

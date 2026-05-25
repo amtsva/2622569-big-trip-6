@@ -30,3 +30,10 @@ export const OFFERS = [
   { id: 'offer-4', title: 'Choose seats', price: 10 },
   { id: 'offer-5', title: 'Travel insurance', price: 30 }
 ];
+
+export const FilterType = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past'
+};
