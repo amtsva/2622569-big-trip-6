@@ -1,20 +1,25 @@
 import FiltersView from './view/filters-view.js';
 import SortView from './view/sort-view.js';
 import PointListView from './view/point-list-view.js';
-import PointView from './view/point-view.js';
-import EditFormView from './view/edit-form-view.js';
 import EmptyPointsView from './view/empty-points-view.js';
+
+import PointPresenter from './presenter/point-presenter.js';
+
 import { render } from './framework/render.js';
 import { FilterType } from './const.js';
 
 export default class Presenter {
   #container = null;
   #pointsModel = null;
-  #pointListComponent = null;
+
+  #pointListComponent = new PointListView();
   #filtersComponent = null;
   #sortComponent = null;
   #emptyPointsComponent = null;
+
   #currentFilter = FilterType.EVERYTHING;
+
+  #pointPresenters = new Map();
 
   constructor(container, pointsModel) {
     this.#container = container;
@@ -28,8 +33,8 @@ export default class Presenter {
       currentFilter: this.#currentFilter,
       onFilterChange: this.#handleFilterChange
     });
+
     this.#sortComponent = new SortView();
-    this.#pointListComponent = new PointListView();
 
     render(this.#filtersComponent, this.#container);
     render(this.#sortComponent, this.#container);
@@ -40,62 +45,59 @@ export default class Presenter {
 
   #handleFilterChange = (filterType) => {
     this.#currentFilter = filterType;
+
     this.#clearPointsList();
     this.#renderPoints();
   };
 
+  #handlePointChange = (updatedPoint) => {
+    this.#pointsModel.updatePoint(updatedPoint);
+
+    this.#pointPresenters
+      .get(updatedPoint.id)
+      .init(updatedPoint);
+  };
+
+  #handleModeChange = () => {
+    this.#pointPresenters.forEach((presenter) => presenter.resetView());
+  };
+
   #clearPointsList() {
     this.#pointListComponent.element.innerHTML = '';
+    this.#pointPresenters.clear();
   }
 
   #renderPoints() {
     const points = this.#pointsModel.getPointsByFilter(this.#currentFilter);
-    const pointsCount = points.length;
 
-    if (pointsCount === 0) {
+    if (points.length === 0) {
       this.#renderEmptyPoints();
       return;
     }
 
-    for (const point of points) {
+    points.forEach((point) => {
       this.#renderPoint(point);
-    }
+    });
   }
 
   #renderEmptyPoints() {
     this.#emptyPointsComponent = new EmptyPointsView(this.#currentFilter);
-    render(this.#emptyPointsComponent, this.#pointListComponent.element);
+
+    render(
+      this.#emptyPointsComponent,
+      this.#pointListComponent.element
+    );
   }
 
   #renderPoint(point) {
-    const pointComponent = new PointView({
-      point: point,
-      onEditClick: () => this.#replacePointToEditForm(point)
+    const pointPresenter = new PointPresenter({
+      pointListContainer: this.#pointListComponent.element,
+      onDataChange: this.#handlePointChange,
+      onModeChange: this.#handleModeChange
     });
 
-    render(pointComponent, this.#pointListComponent.element);
-  }
+    pointPresenter.init(point);
 
-  #replacePointToEditForm(point) {
-    const currentItem = this.#pointListComponent.element.querySelector('.trip-events__item');
-
-    const editFormComponent = new EditFormView({
-      point: point,
-      onFormSubmit: () => this.#replaceEditFormToPoint(point),
-      onCancelClick: () => this.#replaceEditFormToPoint(point)
-    });
-
-    this.#pointListComponent.element.replaceChild(editFormComponent.element, currentItem);
-  }
-
-  #replaceEditFormToPoint(point) {
-    const currentItem = this.#pointListComponent.element.querySelector('.trip-events__item');
-
-    const pointComponent = new PointView({
-      point: point,
-      onEditClick: () => this.#replacePointToEditForm(point)
-    });
-
-    this.#pointListComponent.element.replaceChild(pointComponent.element, currentItem);
+    this.#pointPresenters.set(point.id, pointPresenter);
   }
 }
