@@ -10,6 +10,14 @@ const TYPES = [
   'restaurant'
 ];
 
+const CITIES = [
+  'Amsterdam',
+  'Geneva',
+  'Chamonix',
+  'Saint Petersburg',
+  'Moscow'
+];
+
 const OFFERS = [
   {
     id: 1,
@@ -43,6 +51,7 @@ const SortType = {
 
 export {
   TYPES,
+  CITIES,
   OFFERS,
   FilterType,
   SortType
