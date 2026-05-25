@@ -21,13 +21,33 @@ export default class PointsModel {
 
     switch (filterType) {
       case FilterType.FUTURE:
-        return this.#points.filter((point) => point.startDate > now);
+        return this.#points.filter(
+          (point) => point.startDate > now
+        );
+
       case FilterType.PAST:
-        return this.#points.filter((point) => point.endDate < now);
+        return this.#points.filter(
+          (point) => point.endDate < now
+        );
+
       case FilterType.PRESENT:
-        return this.#points.filter((point) => point.startDate <= now && point.endDate >= now);
+        return this.#points.filter(
+          (point) =>
+            point.startDate <= now &&
+            point.endDate >= now
+        );
+
       default:
         return this.#points;
     }
+  }
+
+  updatePoint(updatedPoint) {
+    this.#points = this.#points.map(
+      (point) =>
+        point.id === updatedPoint.id
+          ? updatedPoint
+          : point
+    );
   }
 }

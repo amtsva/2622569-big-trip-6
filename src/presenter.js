@@ -53,13 +53,17 @@ export default class Presenter {
   #handlePointChange = (updatedPoint) => {
     this.#pointsModel.updatePoint(updatedPoint);
 
-    this.#pointPresenters
-      .get(updatedPoint.id)
-      .init(updatedPoint);
+    const pointPresenter = this.#pointPresenters.get(updatedPoint.id);
+
+    if (pointPresenter) {
+      pointPresenter.init(updatedPoint);
+    }
   };
 
   #handleModeChange = () => {
-    this.#pointPresenters.forEach((presenter) => presenter.resetView());
+    this.#pointPresenters.forEach(
+      (presenter) => presenter.resetView()
+    );
   };
 
   #clearPointsList() {
@@ -68,7 +72,9 @@ export default class Presenter {
   }
 
   #renderPoints() {
-    const points = this.#pointsModel.getPointsByFilter(this.#currentFilter);
+    const points = this.#pointsModel.getPointsByFilter(
+      this.#currentFilter
+    );
 
     if (points.length === 0) {
       this.#renderEmptyPoints();
@@ -81,7 +87,9 @@ export default class Presenter {
   }
 
   #renderEmptyPoints() {
-    this.#emptyPointsComponent = new EmptyPointsView(this.#currentFilter);
+    this.#emptyPointsComponent = new EmptyPointsView(
+      this.#currentFilter
+    );
 
     render(
       this.#emptyPointsComponent,
