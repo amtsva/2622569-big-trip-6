@@ -1,5 +1,15 @@
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
+import dayjs from 'dayjs';
+
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+
 import { TYPES, OFFERS } from '../const.js';
+
+function formatDate(date) {
+  return dayjs(date).format('DD/MM/YY HH:mm');
+}
 
 function createEventTypeItemTemplate(type, currentType) {
   return `
@@ -31,21 +41,31 @@ function createOfferTemplate(offer) {
         type="checkbox"
         name="event-offer-${offer.id}"
       >
-      <label class="event__offer-label" for="event-offer-${offer.id}">
-        <span class="event__offer-title">${offer.title}</span>
+
+      <label
+        class="event__offer-label"
+        for="event-offer-${offer.id}"
+      >
+        <span class="event__offer-title">
+          ${offer.title}
+        </span>
+
         &plus;&euro;&nbsp;
-        <span class="event__offer-price">${offer.price}</span>
+
+        <span class="event__offer-price">
+          ${offer.price}
+        </span>
       </label>
     </div>
   `;
 }
 
-function createDestinationPicturesTemplate(picture) {
+function createPhotoTemplate(photo) {
   return `
     <img
       class="event__photo"
-      src="${picture.src}"
-      alt="${picture.description}"
+      src="${photo.src}"
+      alt="${photo.description}"
     >
   `;
 }
@@ -54,33 +74,42 @@ function createEditFormTemplate(point) {
   const {
     type,
     destination,
-    price,
-    offers
+    basePrice,
+    dateFrom,
+    dateTo
   } = point;
 
-  const eventTypesTemplate = TYPES.map((eventType) =>
-    createEventTypeItemTemplate(eventType, type)
+  const typeItemsTemplate = TYPES.map((itemType) =>
+    createEventTypeItemTemplate(itemType, type)
   ).join('');
 
-  const availableOffers = OFFERS[type] || [];
+  const offers = OFFERS[type] || [];
 
-  const offersTemplate = availableOffers.map((offer) =>
+  const offersTemplate = offers.map((offer) =>
     createOfferTemplate(offer)
   ).join('');
 
-  const pictures = destination.pictures || [];
+  const photos = destination.pictures || [];
 
-  const destinationPicturesTemplate = pictures.map((picture) =>
-    createDestinationPicturesTemplate(picture)
+  const photosTemplate = photos.map((photo) =>
+    createPhotoTemplate(photo)
   ).join('');
 
   return `
     <li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
+
         <header class="event__header">
+
           <div class="event__type-wrapper">
-            <label class="event__type event__type-btn" for="event-type-toggle-1">
-              <span class="visually-hidden">Choose event type</span>
+            <label
+              class="event__type event__type-btn"
+              for="event-type-toggle-1"
+            >
+              <span class="visually-hidden">
+                Choose event type
+              </span>
+
               <img
                 class="event__type-icon"
                 width="17"
@@ -98,9 +127,12 @@ function createEditFormTemplate(point) {
 
             <div class="event__type-list">
               <fieldset class="event__type-group">
-                <legend class="visually-hidden">Event type</legend>
 
-                ${eventTypesTemplate}
+                <legend class="visually-hidden">
+                  Event type
+                </legend>
+
+                ${typeItemsTemplate}
 
               </fieldset>
             </div>
@@ -118,13 +150,16 @@ function createEditFormTemplate(point) {
               class="event__input event__input--destination"
               id="event-destination-1"
               type="text"
-              name="event-destination"
               value="${destination.name}"
             >
           </div>
 
           <div class="event__field-group event__field-group--time">
-            <label class="visually-hidden" for="event-start-time-1">
+
+            <label
+              class="visually-hidden"
+              for="event-start-time-1"
+            >
               From
             </label>
 
@@ -132,13 +167,15 @@ function createEditFormTemplate(point) {
               class="event__input event__input--time"
               id="event-start-time-1"
               type="text"
-              name="event-start-time"
-              value=""
+              value="${formatDate(dateFrom)}"
             >
 
-            &mdash;
+            —
 
-            <label class="visually-hidden" for="event-end-time-1">
+            <label
+              class="visually-hidden"
+              for="event-end-time-1"
+            >
               To
             </label>
 
@@ -146,53 +183,64 @@ function createEditFormTemplate(point) {
               class="event__input event__input--time"
               id="event-end-time-1"
               type="text"
-              name="event-end-time"
-              value=""
+              value="${formatDate(dateTo)}"
             >
           </div>
 
           <div class="event__field-group event__field-group--price">
-            <label class="event__label" for="event-price-1">
-              <span class="visually-hidden">Price</span>
-              &euro;
+            <label
+              class="event__label"
+              for="event-price-1"
+            >
+              <span class="visually-hidden">
+                Price
+              </span>
+              €
             </label>
 
             <input
               class="event__input event__input--price"
               id="event-price-1"
               type="text"
-              name="event-price"
-              value="${price}"
+              value="${basePrice}"
             >
           </div>
 
-          <button class="event__save-btn btn btn--blue" type="submit">
+          <button
+            class="event__save-btn btn btn--blue"
+            type="submit"
+          >
             Save
           </button>
 
-          <button class="event__reset-btn" type="reset">
+          <button
+            class="event__reset-btn"
+            type="reset"
+          >
             Delete
           </button>
 
-          <button class="event__rollup-btn" type="button">
-            <span class="visually-hidden">Open event</span>
-            &plus;
+          <button
+            class="event__rollup-btn"
+            type="button"
+          >
+            <span class="visually-hidden">
+              Open event
+            </span>
           </button>
         </header>
 
         <section class="event__details">
 
-          ${availableOffers.length ? `
-            <section class="event__section event__section--offers">
-              <h3 class="event__section-title event__section-title--offers">
-                Offers
-              </h3>
+          <section class="event__section event__section--offers">
+            <h3 class="event__section-title event__section-title--offers">
+              Offers
+            </h3>
 
-              <div class="event__available-offers">
-                ${offersTemplate}
-              </div>
-            </section>
-          ` : ''}
+            <div class="event__available-offers">
+              ${offersTemplate}
+            </div>
+          </section>
 
           <section class="event__section event__section--destination">
             <h3 class="event__section-title event__section-title--destination">
@@ -205,7 +253,7 @@ function createEditFormTemplate(point) {
 
             <div class="event__photos-container">
               <div class="event__photos-tape">
-                ${destinationPicturesTemplate}
+                ${photosTemplate}
               </div>
             </div>
           </section>
@@ -216,7 +264,12 @@ function createEditFormTemplate(point) {
 }
 
 export default class EditFormView extends AbstractStatefulView {
+  #datepickerFrom = null;
+
+  #datepickerTo = null;
+
   #handleFormSubmit = null;
+
   #handleEditClick = null;
 
   constructor({ point, onFormSubmit, onEditClick }) {
@@ -234,6 +287,20 @@ export default class EditFormView extends AbstractStatefulView {
     return createEditFormTemplate(this._state);
   }
 
+  removeElement() {
+    super.removeElement();
+
+    if (this.#datepickerFrom) {
+      this.#datepickerFrom.destroy();
+      this.#datepickerFrom = null;
+    }
+
+    if (this.#datepickerTo) {
+      this.#datepickerTo.destroy();
+      this.#datepickerTo = null;
+    }
+  }
+
   _restoreHandlers() {
     this.element
       .querySelector('.event__rollup-btn')
@@ -246,20 +313,44 @@ export default class EditFormView extends AbstractStatefulView {
     this.element
       .querySelector('.event__type-group')
       .addEventListener('change', this.#typeChangeHandler);
+
+    this.#setDatepickers();
+  }
+
+  #setDatepickers() {
+    this.#datepickerFrom = flatpickr(
+      this.element.querySelector('#event-start-time-1'),
+      {
+        dateFormat: 'd/m/y H:i',
+        enableTime: true,
+        defaultDate: this._state.dateFrom,
+      }
+    );
+
+    this.#datepickerTo = flatpickr(
+      this.element.querySelector('#event-end-time-1'),
+      {
+        dateFormat: 'd/m/y H:i',
+        enableTime: true,
+        defaultDate: this._state.dateTo,
+      }
+    );
   }
 
   #typeChangeHandler = (evt) => {
     evt.preventDefault();
 
     this.updateElement({
-      type: evt.target.value,
-      offers: []
+      type: evt.target.value
     });
   };
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormSubmit(EditFormView.parseStateToPoint(this._state));
+
+    this.#handleFormSubmit(
+      EditFormView.parseStateToPoint(this._state)
+    );
   };
 
   #editClickHandler = (evt) => {
